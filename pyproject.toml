@@ -12,7 +12,7 @@ license = "MIT"
 authors = [{ name = "Bengal Contributors" }]
 dependencies = [
   "bengal-chirp[data-pg]>=0.10,<0.11",
-  "chirp-workspace-core>=0.1.0a2,<0.2",
+  "chirp-workspace-core>=0.1.0a4,<0.2",
 ]
 
 [project.urls]
@@ -41,6 +41,11 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101"]
+
+[tool.uv]
+find-links = [
+  "https://lbliii.github.io/chirp-workspace-core/",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -47,13 +47,14 @@ with Core's shared migration ledger. Applied migrations are immutable.
 ## Development
 
 The committed dependency is the release range
-`chirp-workspace-core>=0.1.0a2,<0.2`; Git, path, and editable dependencies are intentionally absent
-from package metadata. Until that supplier release is available from the public package index, a
-maintainer can test an exact tagged Core checkout locally without changing the consumer contract:
+`chirp-workspace-core>=0.1.0a4,<0.2`; Git, path, and editable dependencies are intentionally absent
+from package metadata. `uv` resolves Core from its public, immutable GitHub release index and
+records the artifact URL and hash in `uv.lock`. A maintainer can also test an exact tagged Core
+checkout locally without changing the consumer contract:
 
 ```console
 uv venv --python 3.14
-uv pip install -e /path/to/chirp-workspace-core-v0.1.0a2
+uv pip install -e /path/to/chirp-workspace-core-v0.1.0a4
 uv pip install -e . --no-deps
 uv pip install pytest pytest-asyncio pytest-cov ruff ty build
 ```
