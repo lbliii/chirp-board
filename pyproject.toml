@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chirp-board"
+version = "0.1.0a1"
+description = "Focused team issue tracking powered by Chirp and Workspace Core"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+authors = [{ name = "Bengal Contributors" }]
+dependencies = [
+  "bengal-chirp[data-pg]>=0.10,<0.11",
+  "chirp-workspace-core>=0.1.0a4,<0.2",
+]
+
+[project.urls]
+Repository = "https://github.com/lbliii/chirp-board"
+Issues = "https://github.com/lbliii/chirp/issues"
+
+[dependency-groups]
+dev = [
+  "pytest>=9.0",
+  "pytest-asyncio>=1.0",
+  "pytest-cov>=7.0",
+  "ruff>=0.15",
+  "ty>=0.0.11",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["issue(number): GitHub issue acceptance traceability"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.uv]
+find-links = [
+  "https://lbliii.github.io/chirp-workspace-core/",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+chirp_board = ["py.typed", "migrations/*.sql"]
