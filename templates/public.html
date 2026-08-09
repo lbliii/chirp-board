@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chirp Board</title>
+  <link rel="stylesheet" href="/static/board.css">
+</head>
+<body class="board-public">
+  <main class="board-public-card">
+    <p class="board-eyebrow">Chirp Board</p>
+    <h1>{% if mode == "setup" %}Claim the first workspace{% else %}Sign in{% endif %}</h1>
+    <p class="board-lede">
+      Focused team issue tracking with board and list views, ordinary forms, and honest progressive enhancement.
+    </p>
+    {% if error %}<p class="board-error" role="alert">{{ error }}</p>{% endif %}
+    {% if mode == "setup" %}
+    <form method="post" action="/setup" class="board-stack">
+      {{ csrf_field() }}
+      <label>Setup token <input name="setup_token" type="password" required autocomplete="off"></label>
+      <label>Email <input name="email" type="email" required autocomplete="username"></label>
+      <label>Display name <input name="display_name" required maxlength="80"></label>
+      <label>Password <input name="password" type="password" required autocomplete="new-password"></label>
+      <label>Workspace slug <input name="workspace_slug" value="primary" required maxlength="40"></label>
+      <label>Workspace name <input name="workspace_name" value="Primary Workspace" required maxlength="80"></label>
+      <button type="submit">Create workspace</button>
+    </form>
+    {% else %}
+    <form method="post" action="/login" class="board-stack">
+      {{ csrf_field() }}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <label>Email <input name="email" type="email" required autocomplete="username"></label>
+      <label>Password <input name="password" type="password" required autocomplete="current-password"></label>
+      <button type="submit">Sign in</button>
+    </form>
+    {% endif %}
+  </main>
+</body>
+</html>

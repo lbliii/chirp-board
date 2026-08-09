@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block board_page_title %}Commands{% endblock %}
+
+{% block page_content %}
+<section class="board-panel">
+  <h2>Available commands</h2>
+  <ul>
+    {% for command in shell.commands %}
+    <li>
+      <a href="{{ command.url }}">{{ command.label }}</a>
+      {% if command.shortcut %}<kbd>{{ command.shortcut }}</kbd>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

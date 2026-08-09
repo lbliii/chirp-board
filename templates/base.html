@@ -1,0 +1,27 @@
+{% extends "workspace_core/shell.html" %}
+
+{% block workspace_title %}{% block board_title %}Chirp Board · {{ shell.workspace_name }}{% endblock %}{% endblock %}
+
+{% block workspace_head %}
+  <link rel="stylesheet" href="/static/board.css">
+  <script
+    src="/static/vendor/htmx-2.0.10.min.js"
+    defer
+    data-chirp="htmx"
+    data-chirp-htmx-version="2.0.10"
+  ></script>
+  <script src="/static/board.js" defer></script>
+{% endblock %}
+
+{% block workspace_user_menu %}
+  <form method="post" action="/logout" hx-boost="false" hx-disinherit="*">
+    {{ csrf_field() }}
+    <button type="submit">Sign out</button>
+  </form>
+{% endblock %}
+
+{% block workspace_page_title %}{% block board_page_title %}Chirp Board{% endblock %}{% endblock %}
+
+{% block workspace_content %}
+{% block page_content %}{% endblock %}
+{% endblock %}

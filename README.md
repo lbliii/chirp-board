@@ -5,8 +5,20 @@ Focused, keyboard-first team issue tracking powered by Chirp and Workspace Core.
 The bounded product, schema, permission, realtime, and repository contract is recorded in
 [Chirp issue #763](https://github.com/lbliii/chirp/issues/763). Durable Board-domain
 implementation is tracked by [issue #771](https://github.com/lbliii/chirp/issues/771).
+Board and list interaction surfaces are tracked by
+[issue #768](https://github.com/lbliii/chirp/issues/768).
 
 Chirp Board is under active development and is not yet a published Railway product.
+
+## What #768 ships
+
+Server-rendered project and issue workflow on top of the released Board domain:
+
+- workspace home, project landing, board view, list view, issue detail
+- create / edit / move / assign / label / comment / subscribe / archive flows
+- bookmarkable search, typed filters, pagination, and saved views
+- normal-form controls for every mutation, with HTMX progressive enhancement
+- keyboard hooks (`/`, `c`, `j`/`k`, Enter, `m`) without a parallel SPA or JSON API
 
 ## Domain boundary
 
@@ -15,56 +27,37 @@ the `board_*` tables and compiles Core's Viewer, Member, Admin, and Owner roles 
 permissions. Every repository operation requires a request-scoped `WorkspacePrincipal`; every
 read, write, foreign key, and unique constraint carries the workspace boundary.
 
-The first domain release includes:
+## Local development
 
-- one configurable workflow per project, with ordered and archivable statuses;
-- immutable issue identity and atomic project-local issue numbers;
-- priorities, assignments to current members, labels, comments, subscriptions, and typed views;
-- optimistic revisions, deterministic issue ranks, cursor pagination, archive/restore, and
-  immutable secret-safe activity;
-- an idempotent `seed_demo()` helper for local evaluation.
+```console
+uv sync --locked
+WORKSPACE_SETUP_TOKEN=local-board-setup-token-24chars \
+CHIRP_SECRET_KEY=local-board-secret-key-with-32-bytes!! \
+uv run python app.py
+```
 
-It deliberately does not introduce a JSON application API, SPA state model, Redis, a worker, or a
-second ownership model. Server-rendered product routes and realtime delivery arrive in later
-issues; this package is the durable domain boundary they consume.
+Development defaults to SQLite. Visit `/setup` once to claim the first workspace, then use board
+and list views under `/workspaces/{id}/projects/{project_id}/board`.
+
+Acceptance gates:
+
+```console
+uv run ruff check .
+uv run ruff format . --check
+uv run ty check src/chirp_board board_app app.py tests
+uv run pytest --cov=chirp_board --cov=board_app --cov-fail-under=80 -q
+uv build
+```
+
+Behavioral coverage for the interaction surface uses `@pytest.mark.issue(768)`. Domain coverage
+remains `@pytest.mark.issue(771)`.
 
 ## Migrations
 
-Run Workspace Core migrations before Board migrations against the same connected Chirp database:
+Run Workspace Core migrations before Board migrations against the same connected Chirp database.
+The app entry point applies both on startup.
 
-```python
-from chirp.data import migrate
-from chirp_board import migration_directory as board_migrations
-from chirp_workspace_core.migrations import migration_directory as core_migrations
+## Realtime and Railway
 
-await migrate(database, core_migrations())
-await migrate(database, board_migrations())
-```
-
-Board reserves migration versions starting at `1001` so its packaged migrations do not collide
-with Core's shared migration ledger. Applied migrations are immutable.
-
-## Development
-
-The committed dependency is the release range
-`chirp-workspace-core>=0.1.0a4,<0.2`; Git, path, and editable dependencies are intentionally absent
-from package metadata. `uv` resolves Core from its public, immutable GitHub release index and
-records the artifact URL and hash in `uv.lock`. A maintainer can also test an exact tagged Core
-checkout locally without changing the consumer contract:
-
-```console
-uv venv --python 3.14
-uv pip install -e /path/to/chirp-workspace-core-v0.1.0a4
-uv pip install -e . --no-deps
-uv pip install pytest pytest-asyncio pytest-cov ruff ty build
-```
-
-Then run the acceptance gates:
-
-```console
-.venv/bin/ruff check .
-.venv/bin/ruff format . --check
-.venv/bin/ty check src/chirp_board tests
-.venv/bin/pytest --cov=chirp_board --cov-fail-under=80
-.venv/bin/python -m build --no-isolation
-```
+Live activity fan-out and Railway marketplace publication remain #766. V1 stays one Chirp process,
+one PostgreSQL database, and no Redis or worker.
