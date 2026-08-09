@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block board_page_title %}{{ project.name }} activity{% endblock %}
+
+{% block page_content %}
+<section class="board-panel">
+  <h2>Project activity</h2>
+  {% if not activity %}
+  <p class="board-empty" role="status">No activity yet.</p>
+  {% else %}
+  <ol class="board-activity">
+    {% for item in activity %}
+    <li>
+      <time datetime="{{ item.occurred_at }}">{{ item.occurred_at }}</time>
+      <span>{{ item.action }}</span>
+      {% if item.issue_id %}
+      <a href="{{ base_url }}/issues/{{ item.issue_id }}">issue</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</section>
+{% endblock %}

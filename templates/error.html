@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Chirp Board</title>
+  <link rel="stylesheet" href="/static/board.css">
+</head>
+<body class="board-public">
+  <main class="board-public-card">
+    <h1>{{ title }}</h1>
+    <p class="board-error" role="alert">{{ message }}</p>
+    <p><a href="{{ reload_url }}">Reload the current state</a> and try again.</p>
+  </main>
+</body>
+</html>

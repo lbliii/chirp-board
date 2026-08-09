@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block board_page_title %}{{ issue_key }} · {{ issue.title }}{% endblock %}
+
+{% block page_content %}
+{% block issue_detail %}
+<article class="board-issue" id="issue-detail" data-issue-id="{{ issue.id }}">
+  <header class="board-panel">
+    <p class="board-eyebrow">{{ issue_key }}</p>
+    <h2>{{ issue.title }}</h2>
+    <p class="board-meta">
+      Priority {{ issue.priority.value }}
+      · revision {{ issue.revision }}
+      {% if issue.archived_at %}· archived{% endif %}
+    </p>
+    <div class="board-prose">{{ issue.description_source }}</div>
+  </header>
+
+  {% if can_update and not issue.archived_at %}
+  <section class="board-panel">
+    <h3>Edit</h3>
+    {% block issue_edit_form %}
+    <form method="post" action="{{ issue_url }}/edit" class="board-stack" id="issue-edit-form">
+      {{ csrf_field() }}
+      <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+      {% if errors %}<p class="board-error" role="alert">{{ errors.form }}</p>{% endif %}
+      <label>Title <input name="title" required maxlength="200" value="{{ form.title if form else issue.title }}"></label>
+      <label>Description <textarea name="description_source" maxlength="100000">{{ form.description_source if form else issue.description_source }}</textarea></label>
+      <label>
+        Priority
+        <select name="priority">
+          {% for priority in priorities %}
+          <option value="{{ priority.value }}"{% if (form.priority if form else issue.priority.value) == priority.value %} selected{% endif %}>{{ priority.value }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Save changes</button>
+    </form>
+    {% endblock %}
+  </section>
+  {% endif %}
+
+  {% if can_move and not issue.archived_at %}
+  <section class="board-panel" id="move-control">
+    <h3>Move</h3>
+    <form method="post" action="{{ issue_url }}/move" class="board-stack">
+      {{ csrf_field() }}
+      <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+      <input type="hidden" name="view" value="board">
+      <label>
+        Status
+        <select name="status_id">
+          {% for status in statuses %}
+          <option value="{{ status.id }}"{% if status.id == issue.status_id %} selected{% endif %}>{{ status.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Move issue</button>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if can_assign and not issue.archived_at %}
+  <section class="board-panel">
+    <h3>Assignees</h3>
+    <form method="post" action="{{ issue_url }}/assign" class="board-stack">
+      {{ csrf_field() }}
+      <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+      {% for member in members %}
+      <label class="board-check">
+        <input type="checkbox" name="assignee" value="{{ member.id }}"{% if member.id in issue.assignee_user_ids %} checked{% endif %}>
+        {{ member.display_name }}
+      </label>
+      {% endfor %}
+      <button type="submit">Update assignees</button>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if can_update and not issue.archived_at %}
+  <section class="board-panel">
+    <h3>Labels</h3>
+    <form method="post" action="{{ issue_url }}/labels" class="board-stack">
+      {{ csrf_field() }}
+      <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+      {% for label in labels %}
+      <label class="board-check">
+        <input type="checkbox" name="label" value="{{ label.id }}"{% if label.id in issue_label_ids %} checked{% endif %}>
+        {{ label.name }}
+      </label>
+      {% endfor %}
+      <button type="submit">Update labels</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="board-panel" id="comments">
+    <h3>Comments</h3>
+    <ol id="comment-list" class="board-comments">
+      {% for comment in comments %}
+      <li id="comment-{{ comment.id }}">
+        {% if comment.redacted_at %}
+        <p><em>Comment redacted</em></p>
+        {% else %}
+        <p>{{ comment.body_source }}</p>
+        {% endif %}
+        <p class="board-meta">{{ comment.created_at }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if can_comment and not issue.archived_at %}
+    {% block comment_form %}
+    <form
+      method="post"
+      action="{{ issue_url }}/comment"
+      class="board-stack"
+      id="comment-form"
+    >
+      {{ csrf_field() }}
+      {% if errors %}<p class="board-error" role="alert">{{ errors.form }}</p>{% endif %}
+      <label>Comment <textarea name="body_source" required maxlength="100000">{{ form.body_source if form else '' }}</textarea></label>
+      <button type="submit">Add comment</button>
+    </form>
+    {% endblock %}
+    {% endif %}
+  </section>
+
+  <section class="board-panel">
+    <h3>Subscription</h3>
+    <form method="post" action="{{ issue_url }}/subscribe" class="board-inline-form">
+      {{ csrf_field() }}
+      <input type="hidden" name="subscribed" value="1">
+      <button type="submit">Subscribe</button>
+    </form>
+    <form method="post" action="{{ issue_url }}/subscribe" class="board-inline-form">
+      {{ csrf_field() }}
+      <input type="hidden" name="subscribed" value="0">
+      <button type="submit">Unsubscribe</button>
+    </form>
+  </section>
+
+  {% if can_archive %}
+  <section class="board-panel">
+    <h3>Archive</h3>
+    <form method="post" action="{{ issue_url }}/archive" class="board-inline-form">
+      {{ csrf_field() }}
+      <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+      {% if issue.archived_at %}
+      <input type="hidden" name="archived" value="0">
+      <button type="submit">Restore issue</button>
+      {% else %}
+      <input type="hidden" name="archived" value="1">
+      <button type="submit">Archive issue</button>
+      {% endif %}
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="board-panel">
+    <h3>Activity</h3>
+    <ol class="board-activity">
+      {% for item in activity %}
+      <li>
+        <time datetime="{{ item.occurred_at }}">{{ item.occurred_at }}</time>
+        <span>{{ item.action }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+</article>
+{% endblock %}
+{% endblock %}
+
+{% fragment comment_item %}
+<li id="comment-{{ comment.id }}" hx-swap-oob="afterbegin:#comment-list">
+  {% if comment.redacted_at %}
+  <p><em>Comment redacted</em></p>
+  {% else %}
+  <p>{{ comment.body_source }}</p>
+  {% endif %}
+  <p class="board-meta">{{ comment.created_at }}</p>
+</li>
+{% end %}
+

@@ -1,0 +1,87 @@
+<form method="get" action="{{ base_url }}/{{ filters.view }}" class="board-filters" id="board-filters" role="search">
+  <input type="hidden" name="view" value="{{ filters.view }}">
+  <label>
+    Search
+    <input
+      id="board-search"
+      name="q"
+      type="search"
+      value="{{ filters.query }}"
+      maxlength="100"
+      placeholder="Search issues"
+      data-board-search
+    >
+  </label>
+  <fieldset>
+    <legend>Status</legend>
+    {% for status in statuses %}
+    <label class="board-check">
+      <input type="checkbox" name="status" value="{{ status.id }}"{% if status.id in filters.status_ids %} checked{% endif %}>
+      {{ status.name }}
+    </label>
+    {% endfor %}
+  </fieldset>
+  <fieldset>
+    <legend>Priority</legend>
+    {% for priority in priorities %}
+    <label class="board-check">
+      <input type="checkbox" name="priority" value="{{ priority.value }}"{% if priority in filters.priorities %} checked{% endif %}>
+      {{ priority.value }}
+    </label>
+    {% endfor %}
+  </fieldset>
+  <fieldset>
+    <legend>Labels</legend>
+    {% for label in labels %}
+    <label class="board-check">
+      <input type="checkbox" name="label" value="{{ label.id }}"{% if label.id in filters.label_ids %} checked{% endif %}>
+      {{ label.name }}
+    </label>
+    {% endfor %}
+  </fieldset>
+  <label class="board-check">
+    <input type="checkbox" name="archived" value="1"{% if filters.include_archived %} checked{% endif %}>
+    Include archived
+  </label>
+  <label>
+    Sort
+    <select name="sort">
+      <option value="updated_desc"{% if filters.sort == "updated_desc" %} selected{% endif %}>Updated</option>
+      <option value="created_desc"{% if filters.sort == "created_desc" %} selected{% endif %}>Created</option>
+      <option value="priority_desc"{% if filters.sort == "priority_desc" %} selected{% endif %}>Priority</option>
+      <option value="rank"{% if filters.sort == "rank" %} selected{% endif %}>Board rank</option>
+    </select>
+  </label>
+  <button type="submit">Apply filters</button>
+  <a href="{{ base_url }}/board">Board</a>
+  <a href="{{ base_url }}/list">List</a>
+</form>
+
+{% if can_personal_view or can_project_view %}
+<form method="post" action="{{ base_url }}/views" class="board-save-view board-stack">
+  {{ csrf_field() }}
+  <input type="hidden" name="view" value="{{ filters.view }}">
+  <input type="hidden" name="q" value="{{ filters.query }}">
+  {% for status_id in filters.status_ids %}<input type="hidden" name="status" value="{{ status_id }}">{% endfor %}
+  {% for priority in filters.priorities %}<input type="hidden" name="priority" value="{{ priority.value }}">{% endfor %}
+  {% for label_id in filters.label_ids %}<input type="hidden" name="label" value="{{ label_id }}">{% endfor %}
+  {% if filters.include_archived %}<input type="hidden" name="archived" value="1">{% endif %}
+  <input type="hidden" name="sort" value="{{ filters.sort }}">
+  <label>Save current view as <input name="name" required maxlength="80" placeholder="My triage"></label>
+  {% if can_project_view %}
+  <label class="board-check"><input type="checkbox" name="shared" value="1"> Share with project</label>
+  {% endif %}
+  <button type="submit">Save view</button>
+</form>
+{% endif %}
+
+{% if saved_views %}
+<nav class="board-saved-views" aria-label="Saved views">
+  <p>Saved views</p>
+  <ul>
+    {% for view in saved_views %}
+    <li><a href="{{ base_url }}/views/{{ view.id }}">{{ view.name }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}

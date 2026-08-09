@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block board_page_title %}Projects{% endblock %}
+
+{% block page_content %}
+<section class="board-panel" aria-labelledby="projects-heading">
+  <div class="board-panel-header">
+    <h2 id="projects-heading">Projects</h2>
+    <p>Open a project board or list. Search, filters, and saved views stay in the URL.</p>
+  </div>
+
+  {% if empty %}
+  <p class="board-empty" role="status">No projects yet. Create the first workflow to begin triage.</p>
+  {% else %}
+  <ul class="board-project-list" id="project-list">
+    {% for project in projects %}
+    <li>
+      <a href="/workspaces/{{ workspace_id }}/projects/{{ project.id }}">
+        <strong>{{ project.key }}</strong>
+        <span>{{ project.name }}</span>
+      </a>
+      {% if project.description %}<p>{{ project.description }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+{% if can_manage_project %}
+<section id="new-project" class="board-panel">
+  <h2>Create project</h2>
+  {% block project_form %}
+  <form method="post" action="/workspaces/{{ workspace_id }}/projects" class="board-stack" id="project-form">
+    {{ csrf_field() }}
+    {% if errors %}<p class="board-error" role="alert">{{ errors.form }}</p>{% endif %}
+    <label>Key <input name="key" required maxlength="8" value="{{ form.key if form else '' }}" placeholder="ENG"></label>
+    <label>Name <input name="name" required maxlength="120" value="{{ form.name if form else '' }}"></label>
+    <label>Description <textarea name="description" maxlength="2000">{{ form.description if form else '' }}</textarea></label>
+    <label class="board-check"><input type="checkbox" name="seed_demo" value="1"> Also ensure the DEMO seed project exists</label>
+    <button type="submit">Create project</button>
+  </form>
+  {% endblock %}
+</section>
+{% endif %}
+{% endblock %}

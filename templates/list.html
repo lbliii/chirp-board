@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block board_page_title %}{{ project.name }} list{% endblock %}
+
+{% block workspace_page_actions %}
+  {% if can_create %}
+  <a class="board-button" href="{{ base_url }}/issues/new">New issue</a>
+  {% endif %}
+{% endblock %}
+
+{% block page_content %}
+{% block list_view %}
+<div class="board-workspace" id="list-view" data-board-root data-base-url="{{ base_url }}">
+  {% include "components/_filters.html" %}
+
+  {% if not issues and filters.query %}
+  <p class="board-empty" role="status">No issues match the current filters.</p>
+  {% elif not issues %}
+  <p class="board-empty" role="status">No issues yet.</p>
+  {% else %}
+  <table class="board-table" id="issue-list">
+    <thead>
+      <tr>
+        <th scope="col">Key</th>
+        <th scope="col">Title</th>
+        <th scope="col">Status</th>
+        <th scope="col">Priority</th>
+        <th scope="col">Labels</th>
+        <th scope="col">Move</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for issue in issues %}
+      <tr tabindex="0" data-issue-id="{{ issue.id }}" data-issue-url="{{ base_url }}/issues/{{ issue.id }}">
+        <td><a href="{{ base_url }}/issues/{{ issue.id }}">{{ issue_key(project.key, issue.number) }}</a></td>
+        <td>{{ issue.title }}</td>
+        <td>
+          {% for status in statuses %}
+            {% if status.id == issue.status_id %}{{ status.name }}{% endif %}
+          {% endfor %}
+        </td>
+        <td>{{ issue.priority.value }}</td>
+        <td>
+          {% for label in issue.labels %}
+          <span class="board-label board-label-{{ label.color_token.value }}">{{ label.name }}</span>
+          {% endfor %}
+        </td>
+        <td>
+          {% if can_move %}
+          <form method="post" action="{{ base_url }}/issues/{{ issue.id }}/move" class="board-inline-form">
+            {{ csrf_field() }}
+            <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+            <input type="hidden" name="view" value="list">
+            {% if filters.query %}<input type="hidden" name="q" value="{{ filters.query }}">{% endif %}
+            <select name="status_id" aria-label="Move {{ issue_key(project.key, issue.number) }}">
+              {% for status in statuses %}
+              <option value="{{ status.id }}"{% if status.id == issue.status_id %} selected{% endif %}>{{ status.name }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit">Move</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if next_page_url %}
+  <p><a href="{{ next_page_url }}">Next page</a></p>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
+{% endblock %}

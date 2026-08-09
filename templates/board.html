@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block board_page_title %}{{ project.name }} board{% endblock %}
+
+{% block workspace_page_actions %}
+  {% if can_create %}
+  <a class="board-button" href="{{ base_url }}/issues/new">New issue</a>
+  {% endif %}
+{% endblock %}
+
+{% block page_content %}
+{% block board_view %}
+<div class="board-workspace" id="board-view" data-board-root data-base-url="{{ base_url }}">
+  {% include "components/_filters.html" %}
+
+  {% block status_counts %}
+  <div id="status-counts" class="board-status-counts" aria-label="Status counts">
+    {% for status in statuses %}
+    <span class="board-count" data-status="{{ status.id }}">
+      {{ status.name }} <strong>{{ counts.get(status.id, 0) }}</strong>
+    </span>
+    {% endfor %}
+  </div>
+  {% endblock %}
+
+  {% if not issues and filters.query %}
+  <p class="board-empty" role="status">No issues match the current filters.</p>
+  {% elif not issues %}
+  <p class="board-empty" role="status">This board is empty. Create an issue to start triage.</p>
+  {% endif %}
+
+  {% block board_columns %}
+  <div class="board-columns" id="board-columns" role="list">
+    {% for column in columns %}
+    <section
+      class="board-column"
+      id="column-{{ column.status.id }}"
+      data-status-id="{{ column.status.id }}"
+      role="listitem"
+      aria-label="{{ column.status.name }}"
+    >
+      <header>
+        <h2>{{ column.status.name }}</h2>
+        <span aria-live="polite">{{ column.count }}</span>
+      </header>
+      <ul class="board-cards" data-column-list>
+        {% for issue in column.issues %}
+        <li
+          class="board-card"
+          id="issue-{{ issue.id }}"
+          tabindex="0"
+          data-issue-id="{{ issue.id }}"
+          data-issue-revision="{{ issue.revision }}"
+          data-issue-url="{{ base_url }}/issues/{{ issue.id }}"
+        >
+          <a href="{{ base_url }}/issues/{{ issue.id }}">
+            <span class="board-issue-key">{{ issue_key(project.key, issue.number) }}</span>
+            <strong>{{ issue.title }}</strong>
+          </a>
+          <p class="board-meta">
+            <span>{{ issue.priority.value }}</span>
+            {% for label in issue.labels %}
+            <span class="board-label board-label-{{ label.color_token.value }}">{{ label.name }}</span>
+            {% endfor %}
+          </p>
+          {% if can_move %}
+          <details class="board-move" id="move-{{ issue.id }}">
+            <summary>Move</summary>
+            <form
+              method="post"
+              action="{{ base_url }}/issues/{{ issue.id }}/move"
+              class="board-move-form"
+              hx-post="{{ base_url }}/issues/{{ issue.id }}/move"
+              hx-target="#board-view"
+              hx-select="#board-view"
+              hx-swap="outerHTML"
+            >
+              {{ csrf_field() }}
+              <input type="hidden" name="expected_revision" value="{{ issue.revision }}">
+              <input type="hidden" name="view" value="board">
+              {% if filters.query %}<input type="hidden" name="q" value="{{ filters.query }}">{% endif %}
+              <label>
+                Status
+                <select name="status_id" aria-label="Move {{ issue_key(project.key, issue.number) }}">
+                  {% for status in statuses %}
+                  <option value="{{ status.id }}"{% if status.id == issue.status_id %} selected{% endif %}>{{ status.name }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <button type="submit">Move issue</button>
+            </form>
+          </details>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endfor %}
+  </div>
+  {% endblock %}
+</div>
+{% endblock %}
+{% endblock %}
